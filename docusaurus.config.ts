@@ -27,6 +27,9 @@ const config: Config = {
 
   // ✅ Add this top-level `themes` array
   themes: ['@docusaurus/theme-mermaid'],
+  markdown: {
+    mermaid: true,
+  },
 
   presets: [
     [

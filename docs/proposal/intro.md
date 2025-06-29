@@ -26,7 +26,7 @@ Automate the product image pipeline using a centralized service that:
 1. **Fetches images via APIs** from Bynder, Lucid Link, and Salsify.
 2. **Uploads images directly to Cloudinary**.
 3. Uses **Cloudinary transformations** for resizing, optimization, and formatting (e.g., WebP, adaptive quality).
-4. Stores **metadata and status in a tracking system** (database or dashboard).
+4. Store **metadata and status in a tracking system** (database or dashboard).
 5. Exposes an API or webhook for PDP to fetch image URLs dynamically or updates PDP CMS automatically.
 6. Supports **incremental syncs** to handle new or updated images efficiently.
 
@@ -34,18 +34,12 @@ Automate the product image pipeline using a centralized service that:
 
 ## High-Level Architecture Diagram
 
-```
-+--------------------+     +-------------------+     +--------------------+
-|  Bynder / Lucid    | --> | Image Ingestion &  | --> |   Cloudinary       |
-|  Link / Salsify API|     | Processing Service |     |   (Storage + CDN)  |
-+--------------------+     +-------------------+     +--------------------+
-                                     |                          |
-                                     v                          v 
-                           +--------------------+    +--------------------+
-                           |  Image Tracking &  |    |  PDP/CMS           |
-                           |  Status Dashboard  |    | Dynamic URLS       |
-                           +--------------------+    +--------------------+
-                   
+```mermaid
+flowchart LR
+  A[Bynder / Lucid Link / Salsify API] --> B[Image Ingestion and Processing Service]
+  B --> C[Cloudinary - Storage and CDN]
+  C --> E[PDP / CMS fetches Cloudinary URLs]
+  B --> D[Image Tracking and Status Dashboard]
 ```
 
 ---
@@ -62,8 +56,52 @@ Automate the product image pipeline using a centralized service that:
    - Use Cloudinary folders or tags to organize images by product or source.
 
 4. **Metadata & Audit Logging**:
-   - The ingestion service records metadata, upload status, timestamps, and any errors in a tracking database.
-   - This enables monitoring, alerting, and troubleshooting.
+   
+   **Option 1: Opensearch**
+
+   OpenSearch is a powerful, open-source log indexing and search engine suitable for custom, cost-effective observability setups.
+
+   **Benefits:**
+
+   - Fully open source and free to use (self-hosted)
+
+   - Highly customizable dashboards via OpenSearch Dashboards
+
+   - Powerful full-text search and filtering
+
+   - Scalable log ingestion via API
+
+   - Good for storing structured audit data (JSON logs)
+
+   **Use Case Fit:**
+
+   Best for teams that want full control over their log infrastructure and can manage self-hosted services (e.g., via Docker or Kubernetes)
+
+   **Option 2: Datadog**
+
+   Datadog is a premium, cloud-hosted observability platform with integrated logging, monitoring, and alerting.
+
+   **Benefits:**
+
+   - Turnkey setup—no infrastructure to manage
+
+   - Built-in support for dashboards, alerts, and anomaly detection
+
+   - Rich visualization and correlation across logs, metrics, traces
+
+   - Supports log tailing, retention policies, and team collaboration
+
+   - Seamless integration with Cloudinary, GitHub, AWS, Vercel, etc.
+
+   **Trade-offs:**
+
+   - Not fully free — free tier includes basic monitoring for up to 5 hosts but log management is a paid feature
+
+   - Less customizable than OpenSearch but easier to get started
+
+   **Use Case Fit:**
+
+   - Ideal for teams looking for fast deployment, high reliability, and a strong UI/UX without needing to manage infrastructure.
 
 5. **Image Delivery**:
    - Cloudinary URLs with transformation parameters are exposed via an API or injected dynamically into the PDP/CMS.
@@ -104,19 +142,10 @@ Automate the product image pipeline using a centralized service that:
 | Scheduling                 | Cron (Kubernetes, AWS EventBridge, Vercel Cron) | Reliable and flexible scheduling                    |
 | Source APIs                | RESTful APIs (Bynder, Lucid Link, Salsify) | Standardized access to source image repositories   |
 | Cloud Storage & Delivery   | Cloudinary                | Powerful image transformation + global CDN         |
-| Metadata & Audit Logging   | Datadog, Opensearch | **Datadog:** Can track logs and erros  **Opensearch:** can be used for metadata and logging |
+| Metadata & Audit Logging   | Datadog, Opensearch | **Datadog** has enterprise solutiong for tracking. **Opensearch** is an open source solution. |
 | PDP Integration            | API / CMS Integration     | Dynamic image URL injection                         |
 | Security                  | Vault or Environment Variables | Secure secrets management                           |
 
----
-
-```mermaid
-flowchart LR
-  A[Bynder / Lucid Link / Salsify API] --> B[Image Ingestion & Processing Service]
-  B --> C[Cloudinary (Storage + CDN)]
-  C --> E[PDP / CMS<br>Fetches URLs from Cloudinary]
-  B --> D[Image Tracking & Status Dashboard]
-```
 ---
 
 ## Potential Challenges
@@ -127,6 +156,5 @@ flowchart LR
 - **Error Recovery**: Handling partial failures without losing data or blocking pipelines.
 - **Latency**: Large image batches might increase processing time; consider parallelism and throttling.
 - **Access Control**: Proper permissions to fetch images from all source systems.
-- Stagger each image source job and not put them in one job in case one fetch fails.
 
 ---
