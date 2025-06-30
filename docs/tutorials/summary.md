@@ -1,5 +1,8 @@
-
-# Product Image Management Automation for PDPs
+---
+title: Summary
+sidebar_position: 0
+---
+# Product Image Management Automation
 
 ---
 
@@ -45,19 +48,23 @@ flowchart LR
 ---
 
 ## Detailed Workflow Description
+   
+   ### The ingestion and processing pipeline can be initiated in several ways depending on deployment preferences and operational needs:
 
-1. **Triggering the Process**: Scheduled jobs (e.g., daily) or event-driven triggers initiate the ingestion service.
+   - **Scheduled Jobs (e.g., Daily)** Use a scheduler to automatically trigger the image ingestion process at a set interval (e.g., once every 24 hours).
+   - If hosted on Vercel, leverage `export const config = { schedule: 'cron expression' }` to run the endpoint on a cron-like schedule.
+   - **Event-Driven Triggers** The ingestion can also be triggered manually or automatically when someone hits a dedicated API endpoint. This enables on-demand migrations or real-time syncing when new content is available.
+   - **Self-Hosted or AWS Deployment** The ingestion service can be containerized and hosted in AWS (e.g., Lambda, ECS, or EC2) to support greater customization, logging, and scalability. AWS EventBridge or CloudWatch can handle cron scheduling, while API Gateway can trigger functions on demand.
+   - **Fetching Images** The service calls APIs for Bynder, Lucid Link, and Salsify to list and retrieve new or updated images.
 
-2. **Fetching Images**: The service calls APIs for Bynder, Lucid Link, and Salsify to list and retrieve new or updated images.
-
-3. **Image Upload & Transformation**:
+### Image Upload & Transformation:
    - Images are uploaded programmatically to Cloudinary.
    - During upload, Cloudinary transformations are applied: resizing (e.g., 500x400), format conversion (WebP), quality optimization, and cropping.
    - Use Cloudinary folders or tags to organize images by product or source.
 
-4. **Metadata & Audit Logging**:
+### Metadata & Audit Logging:
    
-   **Option 1: Opensearch**
+   #### Option 1: Opensearch
 
    OpenSearch is a powerful, open-source log indexing and search engine suitable for custom, cost-effective observability setups.
 
@@ -77,7 +84,7 @@ flowchart LR
 
    Best for teams that want full control over their log infrastructure and can manage self-hosted services (e.g., via Docker or Kubernetes)
 
-   **Option 2: Datadog**
+   #### Option 2: Datadog
 
    Datadog is a premium, cloud-hosted observability platform with integrated logging, monitoring, and alerting.
 
@@ -103,11 +110,11 @@ flowchart LR
 
    - Ideal for teams looking for fast deployment, high reliability, and a strong UI/UX without needing to manage infrastructure.
 
-5. **Image Delivery**:
+### Image Delivery:
    - Cloudinary URLs with transformation parameters are exposed via an API or injected dynamically into the PDP/CMS.
    - PDPs load images optimized for device and bandwidth automatically.
 
-6. **Incremental Updates**:
+### Incremental Updates:
    - The system detects new or updated images only, avoiding redundant uploads.
    - Supports manual re-sync for corrections.
 
